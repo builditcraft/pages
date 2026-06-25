@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CompTIA Security+ 模擬試験</title>
+    <!-- Google Fonts: Outfit & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (モダンなUI用アイコン) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PapaParse (CSVパース用ライブラリ) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        
+        <!-- ==================== 1. ホーム画面 ==================== -->
+        <section id="screen-home" class="screen active">
+            <header class="home-header">
+                <div class="logo">
+                    <span class="logo-icon"><i data-lucide="shield-check"></i></span>
+                    <h1>Security+ <span>Prep</span></h1>
+                </div>
+            </header>
+
+            <main class="home-main">
+                <!-- 進捗サマリーカード -->
+                <div class="card progress-summary-card">
+                    <h2>学習の進捗</h2>
+                    <div class="progress-details">
+                        <div class="progress-info">
+                            <span>全体の学習済</span>
+                            <strong id="home-progress-text">0 / 0問 (0%)</strong>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="home-progress-bar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-label">正解率</span>
+                                <strong id="home-accuracy-text">-- %</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">弱点問題数</span>
+                                <strong id="home-weak-count" class="text-warning">0問</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 再開ボタン (データがある場合のみJSで表示制御) -->
+                <button id="btn-resume" class="btn btn-primary btn-resume hidden">
+                    <i data-lucide="play"></i>
+                    <span>前回の続きから再開する</span>
+                </button>
+
+                <!-- 学習モード選択 -->
+                <div class="mode-selection-section">
+                    <h3>学習モードを選択</h3>
+                    <div class="mode-grid">
+                        <button class="mode-card" data-mode="all">
+                            <div class="mode-icon color-all"><i data-lucide="book-open"></i></div>
+                            <div class="mode-info">
+                                <h4>順次学習</h4>
+                                <p>全問題を順番に解いていきます</p>
+                            </div>
+                        </button>
+
+                        <button class="mode-card" data-mode="weak" id="mode-btn-weak" disabled>
+                            <div class="mode-icon color-weak"><i data-lucide="alert-triangle"></i></div>
+                            <div class="mode-info">
+                                <h4>弱点克服</h4>
+                                <p>間違えた問題だけを復習</p>
+                            </div>
+                        </button>
+
+                        <button class="mode-card" data-mode="bookmark" id="mode-btn-bookmark" disabled>
+                            <div class="mode-icon color-bookmark"><i data-lucide="bookmark"></i></div>
+                            <div class="mode-info">
+                                <h4>ブックマーク</h4>
+                                <p>お気に入りした問題</p>
+                            </div>
+                        </button>
+
+                        <button class="mode-card" data-mode="domain">
+                            <div class="mode-icon color-domain"><i data-lucide="layers"></i></div>
+                            <div class="mode-info">
+                                <h4>分野別学習</h4>
+                                <p>ドメインを指定して学習</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ドメイン選択モーダル/アコーディオン (JSで動的に生成) -->
+                <div id="domain-selector-container" class="domain-selector-container hidden">
+                    <h3>ドメインの選択</h3>
+                    <div id="domain-list" class="domain-list"></div>
+                </div>
+            </main>
+        </section>
+
+        <!-- ==================== 2. 学習画面 ==================== -->
+        <section id="screen-quiz" class="screen">
+            <header class="quiz-header">
+                <button id="btn-quiz-back" class="btn-icon"><i data-lucide="arrow-left"></i></button>
+                <div class="quiz-progress-indicator">
+                    <span id="quiz-progress-text">1 / 10</span>
+                    <div class="quiz-progress-bar-bg">
+                        <div id="quiz-progress-bar-fill" class="quiz-progress-bar-fill"></div>
+                    </div>
+                </div>
+                <button id="btn-bookmark" class="btn-icon"><i data-lucide="bookmark"></i></button>
+            </header>
+
+            <main class="quiz-main">
+                <!-- 問題カード -->
+                <div class="quiz-card-container">
+                    <div id="quiz-card" class="quiz-card">
+                        <div class="quiz-card-header">
+                            <span id="quiz-domain-tag" class="domain-tag">Domain Name</span>
+                            <span id="quiz-qno" class="qno-tag">問題 1</span>
+                        </div>
+                        <div class="quiz-question-container">
+                            <p id="quiz-question-text">問題文がここに表示されます。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 選択肢エリア -->
+                <div id="quiz-choices" class="quiz-choices-container">
+                    <!-- JSで動的にボタンを生成します -->
+                </div>
+
+                <!-- 解説・結果パネル (解答後に表示) -->
+                <div id="explanation-panel" class="explanation-panel hidden">
+                    <div class="result-banner" id="result-banner">
+                        <span class="result-icon" id="result-icon"><i data-lucide="check-circle-2"></i></span>
+                        <span class="result-text" id="result-text">正解！</span>
+                    </div>
+
+                    <div class="explanation-content">
+                        <h3>解説</h3>
+                        <!-- 選択肢ごとの解説タブ -->
+                        <div class="explanation-tabs" id="explanation-tabs">
+                            <!-- JSで選択肢のタブボタンを動的生成 -->
+                        </div>
+                        <div class="explanation-text-box" id="explanation-text-box">
+                            <!-- 選択した選択肢の解説テキストが表示される -->
+                        </div>
+                    </div>
+
+                    <div class="explanation-actions">
+                        <button id="btn-next-question" class="btn btn-primary">
+                            <span>次の問題へ</span>
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- ==================== 3. リザルト画面 ==================== -->
+        <section id="screen-result" class="screen">
+            <main class="result-main">
+                <div class="result-trophy">
+                    <i data-lucide="trophy"></i>
+                </div>
+                <h2>学習セッション完了！</h2>
+                
+                <div class="result-stats-card">
+                    <div class="result-stat-large">
+                        <span id="result-score-ratio">100%</span>
+                        <p>正解率</p>
+                    </div>
+                    <div class="result-stat-details">
+                        <div class="res-detail-item">
+                            <span>解いた問題数</span>
+                            <strong id="result-total-count">10問</strong>
+                        </div>
+                        <div class="res-detail-item">
+                            <span>正解数</span>
+                            <strong id="result-correct-count" class="text-success">10問</strong>
+                        </div>
+                        <div class="res-detail-item">
+                            <span>不正解数</span>
+                            <strong id="result-incorrect-count" class="text-danger">0問</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-actions">
+                    <button id="btn-retry-weak" class="btn btn-secondary btn-full hidden">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>間違えた問題に再挑戦する</span>
+                    </button>
+                    <button id="btn-result-home" class="btn btn-primary btn-full">
+                        <i data-lucide="home"></i>
+                        <span>ホームに戻る</span>
+                    </button>
+                </div>
+            </main>
+        </section>
+
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
