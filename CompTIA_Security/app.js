@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // CSVファイルのパス
     const CSV_PATH = 'questions.csv';
 
+    // 他のGitHub Pagesアプリとのバッティングを防ぐため、キー名をよりユニークなものに変更
+    const STORAGE_KEY_PROGRESS = 'comptia_security_prep_progress';
+    const STORAGE_KEY_SESSION = 'comptia_security_prep_saved_session';
+
     // DOM要素のキャッシュ
     const screens = {
         home: document.getElementById('screen-home'),
@@ -31,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==================== 3. データロードとパース ====================
     // LocalStorageから進捗をロード
     function loadProgress() {
-        const savedProgress = localStorage.getItem('comptia_progress');
+        const savedProgress = localStorage.getItem(STORAGE_KEY_PROGRESS);
         if (savedProgress) {
             try {
                 progress = JSON.parse(savedProgress);
@@ -45,7 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 進捗をLocalStorageに保存
     function saveProgress() {
-        localStorage.setItem('comptia_progress', JSON.stringify(progress));
+        try {
+            localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(progress));
+        } catch (e) {
+            console.error("進捗データの保存に失敗しました（プライベートモード等の可能性があります）", e);
+        }
     }
 
     // CSVデータを読み込んでパース
@@ -138,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 中断セッションのチェック
     function checkSavedSession() {
-        const savedSession = localStorage.getItem('comptia_saved_session');
+        const savedSession = localStorage.getItem(STORAGE_KEY_SESSION);
         if (savedSession) {
             try {
                 const session = JSON.parse(savedSession);
@@ -154,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch(e) {
                 console.error("セッションの復元に失敗しました", e);
-                localStorage.removeItem('comptia_saved_session');
+                localStorage.removeItem(STORAGE_KEY_SESSION);
             }
         }
     }
@@ -174,6 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==================== 6. クイズセッション制御 ====================
     // 新しいセッションを開始する
     function startNewSession(questions, mode, domain = '') {
+        // 進行中のデータがあり、かつ新規セッションを開始する場合（結果画面からの再挑戦除く）に上書きの確認を促す
+        if (mode !== 'weak_retry' && localStorage.getItem(STORAGE_KEY_SESSION)) {
+            const proceed = confirm('進行中の学習データがあります。新しく学習を開始すると、前回の「続きから再開」ができなくなりますが、よろしいですか？');
+            if (!proceed) return;
+        }
+
         currentQuestions = [...questions];
         currentMode = mode;
         currentDomain = domain;
@@ -220,12 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
             currentHistory: currentHistory,
             qIds: qIds
         };
-        localStorage.setItem('comptia_saved_session', JSON.stringify(sessionData));
+        try {
+            localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(sessionData));
+        } catch (e) {
+            console.error("セッションの保存に失敗しました", e);
+        }
     }
 
     // セッション一時保存データを削除
     function clearSavedSession() {
-        localStorage.removeItem('comptia_saved_session');
+        localStorage.removeItem(STORAGE_KEY_SESSION);
         document.getElementById('btn-resume').classList.add('hidden');
     }
 
