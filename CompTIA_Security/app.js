@@ -112,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 分野（ドメイン）リストの生成
         buildDomainList();
         
+        // 順次学習の開始位置スライダーの生成
+        buildSequenceStartSlider();
+        
         // Lucideアイコンの再適用
         lucide.createIcons();
     }
@@ -142,6 +145,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             domainListEl.appendChild(btn);
         });
+    }
+
+    // 順次学習の開始位置スライダーの生成
+    function buildSequenceStartSlider() {
+        const sliderEl = document.getElementById('sequence-start-slider');
+        if (!sliderEl) return;
+
+        sliderEl.min = 1;
+        sliderEl.max = allQuestions.length;
+        sliderEl.value = 1;
+
+        updateSliderDisplay(0);
+
+        sliderEl.oninput = (e) => {
+            const idx = parseInt(e.target.value, 10) - 1;
+            updateSliderDisplay(idx);
+        };
+    }
+
+    function updateSliderDisplay(idx) {
+        const q = allQuestions[idx];
+        if (!q) return;
+        document.getElementById('slider-current-qno').textContent = `${idx + 1}番目の問題 (${q['問題番号']})`;
+        document.getElementById('slider-current-domain').textContent = q['ドメイン'] || 'その他';
     }
 
     // 中断セッションのチェック
@@ -181,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ==================== 6. クイズセッション制御 ====================
     // 新しいセッションを開始する
-    function startNewSession(questions, mode, domain = '') {
+    function startNewSession(questions, mode, domain = '', startIndex = 0) {
         // 進行中のデータがあり、かつ新規セッションを開始する場合（結果画面からの再挑戦除く）に上書きの確認を促す
         if (mode !== 'weak_retry' && localStorage.getItem(STORAGE_KEY_SESSION)) {
             const proceed = confirm('進行中の学習データがあります。新しく学習を開始すると、前回の「続きから再開」ができなくなりますが、よろしいですか？');
@@ -191,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuestions = [...questions];
         currentMode = mode;
         currentDomain = domain;
-        currentIndex = 0;
+        currentIndex = startIndex;
         currentHistory = [];
 
         // セッションデータをLocalStorageに保存
@@ -475,8 +502,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const mode = card.getAttribute('data-mode');
                 
                 if (mode === 'all') {
-                    // 全問順次
-                    startNewSession(allQuestions, 'all');
+                    // 順次学習の開始位置選択コンテナの表示トグル
+                    const container = document.getElementById('sequence-selector-container');
+                    container.classList.toggle('hidden');
+                    // ドメイン選択コンテナは閉じる
+                    document.getElementById('domain-selector-container').classList.add('hidden');
+                    if (!container.classList.contains('hidden')) {
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
                 } else if (mode === 'weak') {
                     // 弱点克服 (履歴で不正解のもの)
                     const weakQNos = Object.keys(progress.history).filter(k => progress.history[k] === 'incorrect');
@@ -490,11 +523,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 分野（ドメイン）別選択リストの表示トグル
                     const container = document.getElementById('domain-selector-container');
                     container.classList.toggle('hidden');
+                    // 順次学習の開始位置コンテナは閉じる
+                    document.getElementById('sequence-selector-container').classList.add('hidden');
                     if (!container.classList.contains('hidden')) {
                         container.scrollIntoView({ behavior: 'smooth' });
                     }
                 }
             });
+        });
+
+        // 順次学習開始ボタンのイベント
+        document.getElementById('btn-sequence-start').addEventListener('click', () => {
+            const sliderEl = document.getElementById('sequence-start-slider');
+            const startIndex = (parseInt(sliderEl.value, 10) || 1) - 1;
+            startNewSession(allQuestions, 'all', '', startIndex);
         });
 
         // クイズ画面：戻るボタン

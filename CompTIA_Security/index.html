@@ -95,6 +95,25 @@
                     </div>
                 </div>
 
+                <!-- 順次学習の開始位置選択コンテナ (JSで動的に表示制御) -->
+                <div id="sequence-selector-container" class="sequence-selector-container hidden">
+                    <h3>順次学習の開始位置</h3>
+                    <div class="sequence-selector-flow">
+                        <div class="slider-wrapper">
+                            <input type="range" id="sequence-start-slider" class="form-range" min="1" max="1" value="1">
+                            <div class="slider-info">
+                                <span class="slider-label">開始位置:</span>
+                                <strong id="slider-current-qno">1番目の問題</strong>
+                                <span id="slider-current-domain" class="slider-domain-tag">Domain Name</span>
+                            </div>
+                        </div>
+                        <button id="btn-sequence-start" class="btn btn-primary">
+                            <i data-lucide="play"></i>
+                            <span>この問題から開始</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- ドメイン選択モーダル/アコーディオン (JSで動的に生成) -->
                 <div id="domain-selector-container" class="domain-selector-container hidden">
                     <h3>ドメインの選択</h3>

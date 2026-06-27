@@ -320,6 +320,89 @@ body {
     font-size: 12px;
 }
 
+/* 開始位置セレクター - スライダー版 */
+.sequence-selector-container {
+    margin-top: 24px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.sequence-selector-container h3 {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.sequence-selector-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.slider-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-range {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--primary-glow);
+    transition: transform 0.1s ease;
+}
+
+.form-range::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.slider-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    flex-wrap: wrap;
+}
+
+.slider-label {
+    color: var(--text-secondary);
+}
+
+#slider-current-qno {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.slider-domain-tag {
+    font-size: 11px;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    max-width: 60%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* 分野別セレクター */
 .domain-selector-container {
     margin-top: 24px;
