@@ -147,23 +147,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // 中断セッションのチェック
     function checkSavedSession() {
         const savedSession = localStorage.getItem(STORAGE_KEY_SESSION);
+        const resumeBtn = document.getElementById('btn-resume');
+        
         if (savedSession) {
             try {
                 const session = JSON.parse(savedSession);
-                // 保存された問題番号リストが有効かチェック
-                if (session.qIds && session.qIds.length > 0) {
-                    const resumeBtn = document.getElementById('btn-resume');
-                    resumeBtn.classList.remove('hidden');
-                    
-                    // クリックイベントの登録
-                    resumeBtn.onclick = () => {
-                        resumeSession(session);
-                    };
+                // 保存されたデータが正しい構造か厳密にチェック
+                if (session && Array.isArray(session.qIds) && session.qIds.length > 0) {
+                    if (resumeBtn) {
+                        resumeBtn.classList.remove('hidden');
+                        // クリックイベントの登録
+                        resumeBtn.onclick = () => {
+                            resumeSession(session);
+                        };
+                    }
+                    return;
                 }
             } catch(e) {
                 console.error("セッションの復元に失敗しました", e);
                 localStorage.removeItem(STORAGE_KEY_SESSION);
             }
+        }
+        // セッションがない、または無効な場合はボタンを非表示にする
+        if (resumeBtn) {
+            resumeBtn.classList.add('hidden');
         }
     }
 
@@ -215,13 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 中断されたセッションから再開する
     function resumeSession(session) {
-        currentMode = session.mode;
+        // 安全なフォールバックを伴う代入
+        currentMode = session.mode || 'all';
         currentDomain = session.domain || '';
-        currentIndex = session.currentIndex;
-        currentHistory = session.currentHistory || [];
+        currentHistory = Array.isArray(session.currentHistory) ? session.currentHistory : [];
         
         // 保存された問題番号から対象の問題を再構築
-        currentQuestions = session.qIds.map(qNo => {
+        const qIds = Array.isArray(session.qIds) ? session.qIds : [];
+        currentQuestions = qIds.map(qNo => {
             return allQuestions.find(q => q['問題番号'] === qNo);
         }).filter(Boolean);
 
@@ -229,6 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('再開する問題データが見つかりませんでした。');
             showScreen('home');
             return;
+        }
+
+        // インデックスの境界チェック
+        currentIndex = typeof session.currentIndex === 'number' ? session.currentIndex : 0;
+        if (currentIndex < 0 || currentIndex >= currentQuestions.length) {
+            currentIndex = 0;
         }
 
         showScreen('quiz');
